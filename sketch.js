@@ -8,7 +8,7 @@ function setup() {
 
 function draw(){
   background(230);
-  // hello i am changing something else now
+  // hello i am changing something else now and something else
   textHere();
 }
 
