@@ -1,0 +1,56 @@
+// define R/G/B LEDpin
+int redPin1 = 2;
+int greenPin1 = 3;
+int bluePin1 = 4;
+
+
+// define RGB LEDpin
+int redPin2 = 6;
+int greenPin2 = 7;
+int bluePin2 = 8;
+
+// define joystick pin
+const int joyX = A0;
+const int joyY = A1;
+const int switchPin = 12;
+
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(switchPin, INPUT_PULLUP);
+  Serial.setTimeout(10);
+}
+
+void loop() {
+  // set the joystick
+  int  xValue = analogRead(joyX) / 5;
+  delay(1);
+  int  yValue = analogRead(joyY) / 5;
+  int switchValue = digitalRead(switchPin);
+
+  Serial.print(xValue);
+  Serial.print(",");
+  Serial.print(yValue);
+  Serial.print(",");
+  Serial.println(switchValue);
+
+
+  // // set the LED
+  if (Serial.available() >= 7) {
+    byte column = Serial.parseInt();
+    byte red = Serial.parseInt();
+    byte green = Serial.parseInt();
+    byte blue = Serial.parseInt();
+
+    if (column == 0 ) {
+      analogWrite(redPin1, 255 - red);
+      analogWrite(greenPin1, 255 - green);
+      analogWrite(bluePin1, 255 - blue);
+
+    } else if (column == 1 ) {
+      analogWrite(redPin2, 255 - red);
+      analogWrite(greenPin2, 255 - green);
+      analogWrite(bluePin2, 255 - blue);
+    }
+  }
+}
