@@ -1,0 +1,98 @@
+#include <ComponentObject.h>
+#include <RangeSensor.h>
+#include <SparkFun_VL53L1X.h>
+#include <vl53l1x_class.h>
+#include <vl53l1_error_codes.h>
+
+// Define FSR pin:
+#define fsrpinL A0
+#define fsrpinR A1
+
+int mvm1 = 5; // micro vibration motor pin 5.
+int mvm2 = 6;
+int mvm3 = 3;
+int dataLED = 0;
+int dataMotor = 0;
+int led1 = 9;//  led pin
+int led2 = 10;//  led pin
+int pos = 0;  // servo postion
+int fsrreadingL; //Variable to store FSR value
+int fsrreadingR;
+
+
+
+#include <Wire.h>
+#include "SparkFun_VL53L1X.h"
+SFEVL53L1X distanceSensor;
+
+
+void setup(void) {
+
+  pinMode(mvm1, OUTPUT);
+  pinMode(mvm2, OUTPUT);
+  pinMode(mvm3, OUTPUT);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  //  myservo.attach(9);
+
+  Wire.begin();
+  Serial.begin(9600);
+
+
+  if (distanceSensor.begin() != 0) //Begin returns 0 on a good init
+  {
+    Serial.println("Sensor failed to begin. Please check wiring. Freezing...");
+    while (1);
+  }
+  Serial.println("Sensor online!");
+}
+
+void loop(void) {
+  byte intensity;
+  // Read the FSR pin and store the output as fsrreading:
+  fsrreadingL = analogRead(fsrpinL);
+  fsrreadingR = analogRead(fsrpinR);
+
+
+  // if fdr detect the person sitting on the rug
+  if (fsrreadingL > 10 && fsrreadingR > 10) {
+    //set the vl53l1x
+    distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+    while (!distanceSensor.checkForDataReady()) {
+      delay(1);
+    }
+    int distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+    distanceSensor.clearInterrupt();
+    distanceSensor.stopRanging();
+
+    Serial.print("Distance(mm): ");
+    Serial.print(distance);
+    Serial.println();
+
+
+    if (distance >= 590 && distance <= 640) {
+      dataLED = map(distance, 590, 640, 0, 255);
+      dataMotor = map(distance, 590, 640, 150, 255);
+      // LED
+      analogWrite(led1, dataLED);
+      analogWrite(led2, dataLED);
+      // vibration motor
+      analogWrite(mvm1, dataMotor);
+      analogWrite(mvm2, dataMotor);
+      analogWrite(mvm3, dataMotor);
+      delay(1);
+    } else if ( distance > 590 || distance < 6411      0) {
+      while (dataLED > 100) {
+        dataLED--;
+        analogWrite(led1, dataLED);
+        analogWrite(led2, dataLED);
+        Serial.println(dataLED);
+        delay(5);
+      }
+
+      analogWrite(mvm1, 150);
+      analogWrite(mvm2, 150);
+      analogWrite(mvm3, 150);
+      delay(1);
+    }
+  } else {
